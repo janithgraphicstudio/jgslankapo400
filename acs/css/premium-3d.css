@@ -1,0 +1,7 @@
+/* ========== Premium 3D Effects ========== */
+
+/* Ensure background parallax is smooth */
+.animated-background {
+    will-change: transform;
+    pointer-events: none; /* Let mouse events pass through */
+}

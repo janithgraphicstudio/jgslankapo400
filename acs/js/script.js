@@ -114,13 +114,54 @@ document.addEventListener('DOMContentLoaded', function () {
             mouseMultiplier: 1,
             smoothTouch: false,
             touchMultiplier: 2,
+            infinite: false,
         });
 
+        // Sync Lenis with GSAP ScrollTrigger to prevent jitter/shaking
+        if (typeof ScrollTrigger !== 'undefined') {
+            lenis.on('scroll', ScrollTrigger.update);
+        }
+
+        // Drive Lenis scrolling natively via high-priority requestAnimationFrame loop
+        // to bypass any GSAP ticker latency or lag-smoothing hiccups
         function raf(time) {
             lenis.raf(time);
             requestAnimationFrame(raf);
         }
         requestAnimationFrame(raf);
+
+        // Continuous resize sync using ResizeObserver to prevent empty scroll space
+        // Keep ScrollTrigger.refresh() OUT of this loop to prevent infinite layout-calculation cascades
+        if (typeof ResizeObserver !== 'undefined') {
+            const resizeObserver = new ResizeObserver(() => {
+                lenis.resize();
+            });
+            resizeObserver.observe(document.body);
+        }
+
+        // Fallback load-event resizes (safe to refresh ScrollTrigger once layout finishes loading)
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                lenis.resize();
+                if (typeof ScrollTrigger !== 'undefined') {
+                    ScrollTrigger.refresh();
+                }
+            }, 600);
+        });
+
+        // Intercept anchor links for smooth scrolling via Lenis
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const targetId = this.getAttribute('href');
+                if (targetId && targetId !== '#') {
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        lenis.scrollTo(targetElement, { offset: -50 }); // Offset for navbar
+                    }
+                }
+            });
+        });
     } else {
         console.warn('Lenis not loaded');
     }
@@ -181,28 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 delay: 0.5
             });
         }
-
-        // NOTE: Image parallax disabled — it causes images to overflow
-        // the portfolio card wrapper, creating visual glitches on scroll.
-        // gsap.utils.toArray('.portfolio-img, .project-card-image').forEach(img => { ... });
-
-        // Section Titles Reveal
-        const sectionTitles = document.querySelectorAll('.section-title');
-        if (sectionTitles.length > 0) {
-            gsap.utils.toArray(sectionTitles).forEach(title => {
-                gsap.from(title, {
-                    scrollTrigger: {
-                        trigger: title,
-                        start: "top 80%",
-                        toggleActions: "play none none reverse"
-                    },
-                    y: 50,
-                    opacity: 0,
-                    duration: 1,
-                    ease: "power3.out"
-                });
-            });
-        }
+        // Section Titles Reveal logic moved to 3d-effects.js to prevent duplication and jitter.
     } else {
         console.warn('GSAP or ScrollTrigger not loaded');
     }
@@ -309,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         grabCursor: true,
         allowTouchMove: true,
-    }, 6);
+    }, 15);
 
     // --- Testimonials Slider Logic ---
     const testimonialsSlider = initLoopingSwiper('.testimonials-slider', {
@@ -335,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 slidesPerView: 3,
             },
         }
-    }, 8);
+    }, 15);
 
     // --- Animate Skills Bars on Scroll ---
     const skillBars = document.querySelectorAll('.skill-bar');
@@ -642,20 +662,122 @@ document.addEventListener('DOMContentLoaded', function () {
             const explainContainer = document.getElementById('chatbot-explain');
             if (explainContainer) explainContainer.classList.add('hide');
 
-            // --- WhatsApp Logic ---
-            const dateTime = new Date().toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
-            const whatsappMessage = `*Chatbot Inquiry* 🤖\n\n*Message:* ${message}\n*Date:* ${dateTime}`;
-            const whatsappUrl = `https://wa.me/94702001859?text=${encodeURIComponent(whatsappMessage)}`;
+            const lowerMsg = message.toLowerCase();
 
-            // WhatsApp එක නව tab එකකින් විවෘත කිරීම
-            window.open(whatsappUrl, '_blank');
-            // --- End WhatsApp Logic ---
-
+            // Intelligent Keyword Parsing & Direct Inline Responses (No direct popups)
             setTimeout(() => {
-                addBotMessage("Your message has been sent to our support team. Thank you!", () => {
-                    setTimeout(showResetButton, 1000);
-                });
-            }, 1000);
+                if (lowerMsg.includes('hi') || lowerMsg.includes('hello') || lowerMsg.includes('hey') || lowerMsg.includes('ආයුබෝවන්') || lowerMsg.includes('හායි')) {
+                    addBotMessage("Hello! 😊 Welcome to JGS ChatBot Assistant. How can I help you today? You can choose a category below or ask me about pricing, services, or contact details.", () => {
+                        setTimeout(showMainCategories, 1000);
+                    });
+                } else if (lowerMsg.includes('price') || lowerMsg.includes('pricing') || lowerMsg.includes('cost') || lowerMsg.includes('මිල') || lowerMsg.includes('ගණන්')) {
+                    const priceMsg = `
+                        <strong>Our Premium Packages:</strong><br>
+                        💼 <strong>BUSINESS PACKAGE:</strong> Rs. 8,000 (10 Posts, 5 Logos, 10 Other Services)<br>
+                        👑 <strong>VIP LEVEL PACKAGE:</strong> Rs. 10,000 (20 Posts, 10 Logos, 10 Other Services)<br>
+                        ⭐ <strong>VIP EXPRESS PACKAGE:</strong> Rs. 15,000 (Unlimited Designs + Protection)<br><br>
+                        <em>To get a quote for other individual services (e.g. Logo Design, Banner, Video Editing), you can click on the shopping cart icon on the portfolio cards above, or select "Graphic Design" in the options.</em>
+                    `;
+                    addBotMessage(priceMsg, () => {
+                        setTimeout(showResetButton, 1000);
+                    });
+                } else if (lowerMsg.includes('logo') || lowerMsg.includes('ලෝගෝ')) {
+                    const logoMsg = `
+                        🎨 <strong>Logo Design Services:</strong><br>
+                        • 2 Color Normal Logo: Rs. 2,500<br>
+                        • Full Color Corporate Branding Logo: Rs. 5,000 - Rs. 15,000<br>
+                        • Source files (AI, PSD, SVG) are provided <strong>FREE</strong> with revisions!<br><br>
+                        Would you like to order a logo design now?
+                    `;
+                    addBotMessage(logoMsg, () => {
+                        const orderHtml = `
+                            <div class="options-list">
+                                <a href="https://wa.me/94702001859?text=I%20want%20to%20order%20a%20Logo%20Design" target="_blank" class="option-item" style="background:#25d366; color:#fff; font-weight:bold; justify-content:center; text-decoration:none; display:flex; align-items:center; gap:8px;">
+                                    <i class="fab fa-whatsapp"></i> Order Logo via WhatsApp
+                                </a>
+                            </div>
+                        `;
+                        addDynamicBotMessage(orderHtml, '.option-item', 'click', () => {
+                            setTimeout(showResetButton, 500);
+                        });
+                    });
+                } else if (lowerMsg.includes('website') || lowerMsg.includes('web') || lowerMsg.includes('වෙබ්')) {
+                    const webMsg = `
+                        💻 <strong>Web Design & Development:</strong><br>
+                        • We build premium, modern, responsive websites (Vite, Next.js, HTML/JS/CSS).<br>
+                        • Equipped with custom interactive 3D effects, animations, and speed optimizations.<br>
+                        • Perfect for portfolios, brands, shops, and business pages.<br><br>
+                        Contact us to discuss your project requirements!
+                    `;
+                    addBotMessage(webMsg, () => {
+                        const contactHtml = `
+                            <div class="options-list">
+                                <a href="https://wa.me/94702001859?text=I%20am%20interested%20in%20Web%20Design%20services" target="_blank" class="option-item" style="background:#0059ff; color:#fff; font-weight:bold; justify-content:center; text-decoration:none; display:flex; align-items:center; gap:8px;">
+                                    <i class="fab fa-whatsapp"></i> Discuss Web Project
+                                </a>
+                            </div>
+                        `;
+                        addDynamicBotMessage(contactHtml, '.option-item', 'click', () => {
+                            setTimeout(showResetButton, 500);
+                        });
+                    });
+                } else if (lowerMsg.includes('contact') || lowerMsg.includes('phone') || lowerMsg.includes('whatsapp') || lowerMsg.includes('email') || lowerMsg.includes('කතා කරන්න') || lowerMsg.includes('දුරකථන')) {
+                    const contactMsg = `
+                        📞 <strong>JGS Lanka Co. Contacts:</strong><br>
+                        • <strong>WhatsApp:</strong> +94 70 200 1859<br>
+                        • <strong>Hotline:</strong> +94 70 200 1859<br>
+                        • <strong>Email:</strong> janithgraphicstudio.e@gmail.com<br>
+                        • <strong>Office Hours:</strong> 24/7 online consultation
+                    `;
+                    addBotMessage(contactMsg, () => {
+                        setTimeout(showResetButton, 1000);
+                    });
+                } else if (lowerMsg.includes('location') || lowerMsg.includes('address') || lowerMsg.includes('කුරුණෑගල') || lowerMsg.includes('පිහිටීම')) {
+                    const locMsg = `
+                        📍 <strong>Our Location:</strong><br>
+                        • JGS Lanka Co. is based in Kurunegala, Sri Lanka 🇱🇰.<br>
+                        • You can view our map in the Contact section of this page, or click below to view on Google Maps.
+                    `;
+                    addBotMessage(locMsg, () => {
+                        const mapsHtml = `
+                            <div class="options-list">
+                                <a href="https://maps.app.goo.gl/t8jgEAztTUbimkE6A" target="_blank" class="option-item" style="justify-content:center; text-decoration:none; display:flex; align-items:center; gap:8px;">
+                                    <i class="fas fa-map-marker-alt"></i> View on Google Maps
+                                </a>
+                            </div>
+                        `;
+                        addDynamicBotMessage(mapsHtml, '.option-item', 'click', () => {
+                            setTimeout(showResetButton, 500);
+                        });
+                    });
+                } else {
+                    // Fallback for custom inquiries
+                    const fallbackMsg = `
+                        I am JGS ChatBot Assistant. 🤖<br>
+                        I didn't quite catch that, but I can instantly redirect your message to our human support team on WhatsApp for a personal response!
+                    `;
+                    addBotMessage(fallbackMsg, () => {
+                        const dateTime = new Date().toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
+                        const whatsappMessage = `*Chatbot Inquiry* 🤖\n\n*Message:* ${message}\n*Date:* ${dateTime}`;
+                        const whatsappUrl = `https://wa.me/94702001859?text=${encodeURIComponent(whatsappMessage)}`;
+                        
+                        const actionHtml = `
+                            <div class="options-list" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+                                <a href="${whatsappUrl}" target="_blank" class="option-item" style="background:#25d366; color:#fff; font-weight:bold; justify-content:center; text-decoration:none; display:flex; align-items:center; gap:8px;">
+                                    <i class="fab fa-whatsapp"></i> Send message to WhatsApp
+                                </a>
+                                <div class="option-item reset-btn" data-action="reset" style="justify-content:center; display:flex; align-items:center; gap:8px;">
+                                    <i class="fas fa-redo"></i> Start Over
+                                </div>
+                            </div>
+                        `;
+                        addDynamicBotMessage(actionHtml, '.reset-btn', 'click', () => {
+                            chatbotMessages.innerHTML = '';
+                            showInitialMessages();
+                        });
+                    });
+                }
+            }, 500);
         };
 
         // Chatbot එක විවෘත කිරීම සහ වැසීම
@@ -962,6 +1084,34 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         };
+
+        window.triggerChatbotPriceInquiry = (details) => {
+            // First show user message asking for item price
+            addUserMessage(`Price range of "${details.title}"?`);
+
+            // Then show bot response with the details
+            setTimeout(() => {
+                const messageHtml = `
+                    <div style="font-family: inherit; line-height: 1.6;">
+                        <h4 style="color: #0059ff; margin: 0 0 5px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;"><i class="fas fa-tag"></i> ${details.title}</h4>
+                        <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); margin: 8px 0;">
+                            <strong style="color: #00ff66;">Price Range:</strong> ${details.priceRange}
+                        </div>
+                        <p style="margin: 5px 0 12px 0; font-size: 0.9rem; color: #ccc; white-space: pre-line;">${details.description}</p>
+                        <div class="options-list" style="margin-top: 10px;">
+                            <a href="https://wa.me/94702001859?text=${encodeURIComponent('I would like to order: ' + details.title + '\nPrice Range: ' + details.priceRange)}" 
+                               target="_blank" class="option-item" style="background: #25d366; color: #fff; justify-content: center; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                               <i class="fab fa-whatsapp"></i> Order Now via WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                addBotMessage(messageHtml, () => {
+                    setTimeout(showResetButton, 1000);
+                });
+            }, 800);
+        };
     }
     // --- End of Chatbot Logic (Advanced Version) --- [English]
 
@@ -1011,75 +1161,35 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- Portfolio Price Popup Logic ---
-    // priceDetailsData is now loaded synchronously via details.js
-
+    // --- Portfolio Price Inquiry via Chatbot Logic ---
     window.showPricePopup = function (event, button) {
         event.preventDefault();
         event.stopPropagation();
 
         const itemId = button.getAttribute('data-item');
-        const popup = document.getElementById('price-popup');
 
-        // Use window.priceDetailsData loaded from details.js
         if (!window.priceDetailsData || !window.priceDetailsData[itemId]) {
             console.warn('Details not found for item:', itemId);
             return;
-        } else {
-            const details = window.priceDetailsData[itemId];
-
-            // Update content
-            document.getElementById('price-popup-title').textContent = details.title;
-            document.getElementById('price-popup-range').textContent = details.priceRange;
-            document.getElementById('price-popup-desc').textContent = details.description;
-
-            // Set WhatsApp link message
-            const waLink = document.querySelector('.price-popup-buy-btn');
-            waLink.style.display = 'block';
-            const message = `I would like to order: ${details.title}\nPrice Range: ${details.priceRange}`;
-            waLink.href = `https://wa.me/94702001859?text=${encodeURIComponent(message)}`;
         }
 
-        // Position popup above the button like a chat bubble
-        popup.style.display = 'flex'; // make sure it's display flex before measuring
-        const btnRect = button.getBoundingClientRect();
+        const details = window.priceDetailsData[itemId];
 
-        let topPos = btnRect.top + window.scrollY - popup.offsetHeight - 15; // 15px above for arrow space
-        let leftPos = btnRect.right - 280 + window.scrollX; // Align right side with button (280px is popup width)
-
-        // Prevent overflowing left edge
-        if (leftPos < 10) {
-            leftPos = 10;
-        }
-        // Prevent overflowing top edge
-        if (topPos < window.scrollY + 10) {
-            topPos = btnRect.bottom + window.scrollY + 15; // Show below if no space above
-            // Hide the default arrow and show top arrow (advanced css needed, or just let it be)
+        // 1. Open Chatbot Panel
+        const chatbotPanel = document.querySelector('.chatbot-panel');
+        if (chatbotPanel) {
+            chatbotPanel.classList.add('active');
+            
+            // Hide explain cards
+            const explainContainer = document.getElementById('chatbot-explain');
+            if (explainContainer) explainContainer.classList.add('hide');
         }
 
-        popup.style.top = `${topPos}px`;
-        popup.style.left = `${leftPos}px`;
-
-        popup.classList.add('active');
+        // 2. Trigger inquiry in chatbot
+        if (window.triggerChatbotPriceInquiry) {
+            window.triggerChatbotPriceInquiry(details);
+        }
     };
-
-    window.closePricePopup = function () {
-        const popup = document.getElementById('price-popup');
-        popup.classList.remove('active');
-    };
-
-    // Close popup when clicking outside
-    document.addEventListener('click', function (event) {
-        const popup = document.getElementById('price-popup');
-        if (popup.classList.contains('active')) {
-            // Check if click was outside the popup and not on a buy button
-            const isClickInside = popup.contains(event.target);
-            const isBuyBtnClick = event.target.closest('.buy-btn');
-            if (!isClickInside && !isBuyBtnClick) {
-                closePricePopup();
-            }
-        }
-    });
 
     // --- Company Branding Section (New) ---
 
@@ -1112,7 +1222,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 spaceBetween: 30
             }
         }
-    }, 6);
+    }, 15);
 
     const logoSwiper = initLoopingSwiper('.branding-slider-logo', {
         loop: true,
@@ -1142,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 spaceBetween: 30
             }
         }
-    }, 6);
+    }, 15);
 
     // Tab ක්‍රියාකාරීත්වය
     const tabs = document.querySelectorAll('.tab-btn');
@@ -1196,167 +1306,3 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 })();
 
-/**
- * --- JGS Powerful Search Engine Logic ---
- */
-(function () {
-    const searchOverlay = document.getElementById('search-overlay');
-    const searchInput = document.getElementById('search-input');
-    const searchResults = document.getElementById('search-results');
-    const searchOpenBtn = document.getElementById('search-open-btn');
-    const searchCloseBtn = document.getElementById('search-close-btn');
-    const searchClearBtn = document.getElementById('search-clear-btn');
-
-    let searchIndex = [];
-
-    // 1. Build Search Index
-    function buildIndex() {
-        searchIndex = [];
-
-        // Index Sections
-        document.querySelectorAll('section[id], header[id]').forEach(section => {
-            const id = section.getAttribute('id');
-            const title = section.querySelector('.section-title, .hero-title')?.innerText || id;
-            const desc = section.querySelector('.project-intro, .hero-description')?.innerText || '';
-
-            searchIndex.push({
-                type: 'Section',
-                title: title.trim(),
-                desc: desc.trim().substring(0, 100) + '...',
-                target: `#${id}`,
-                icon: 'fa-layer-group'
-            });
-        });
-
-        // Index Portfolio Cards
-        document.querySelectorAll('.portfolio-card').forEach(card => {
-            const title = card.querySelector('.portfolio-title')?.innerText || '';
-            const desc = card.querySelector('.portfolio-description')?.innerText || '';
-            const link = card.querySelector('a')?.getAttribute('href') || '#';
-
-            if (title) {
-                searchIndex.push({
-                    type: 'Portfolio',
-                    title: title.trim(),
-                    desc: desc.trim().substring(0, 100) + '...',
-                    target: link,
-                    icon: 'fa-briefcase'
-                });
-            }
-        });
-
-        // Index Pricing/FAQ Items
-        document.querySelectorAll('.accordion-item').forEach(item => {
-            const title = item.querySelector('.accordion-header')?.innerText || '';
-            const content = item.querySelector('.accordion-content')?.innerText || '';
-
-            if (title) {
-                searchIndex.push({
-                    type: 'Info/FAQ',
-                    title: title.trim(),
-                    desc: content.trim().substring(0, 100) + '...',
-                    target: '#price', // Generic target for price/faq
-                    icon: 'fa-question-circle'
-                });
-            }
-        });
-    }
-
-    // 2. Open / Close Search
-    function toggleSearch(show) {
-        if (show) {
-            searchOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
-            setTimeout(() => searchInput.focus(), 300);
-            if (searchIndex.length === 0) buildIndex();
-        } else {
-            searchOverlay.classList.remove('active');
-            document.body.style.overflow = '';
-            searchInput.value = '';
-            renderResults([]);
-        }
-    }
-
-    // 3. Render Results
-    function renderResults(results) {
-        if (results.length === 0) {
-            if (searchInput.value.trim() === '') {
-                searchResults.innerHTML = `
-                    <div class="search-empty-state">
-                        <i class="fas fa-search"></i>
-                        <p>Start typing to search across the portfolio...</p>
-                    </div>`;
-            } else {
-                searchResults.innerHTML = `
-                    <div class="search-empty-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>No results found for "${searchInput.value}"</p>
-                    </div>`;
-            }
-            return;
-        }
-
-        searchResults.innerHTML = results.map((res, index) => `
-            <a href="${res.target}" class="search-item" style="animation-delay: ${index * 0.05}s">
-                <div class="search-item-icon">
-                    <i class="fas ${res.icon}"></i>
-                </div>
-                <div class="search-item-info">
-                    <span class="search-item-title">${res.title}</span>
-                    <span class="search-item-desc">${res.desc}</span>
-                </div>
-                <i class="fas fa-chevron-right" style="opacity: 0.3"></i>
-            </a>
-        `).join('');
-
-        // Add click events to close overlay on navigation
-        searchResults.querySelectorAll('.search-item').forEach(item => {
-            item.addEventListener('click', () => toggleSearch(false));
-        });
-    }
-
-    // 4. Search Execution
-    function performSearch(query) {
-        query = query.toLowerCase().trim();
-        if (query.length < 2) {
-            renderResults([]);
-            searchClearBtn.classList.remove('active');
-            return;
-        }
-
-        searchClearBtn.classList.add('active');
-
-        const filtered = searchIndex.filter(item =>
-            item.title.toLowerCase().includes(query) ||
-            item.desc.toLowerCase().includes(query) ||
-            item.type.toLowerCase().includes(query)
-        );
-
-        renderResults(filtered);
-    }
-
-    // Event Listeners
-    if (searchOpenBtn) searchOpenBtn.addEventListener('click', () => toggleSearch(true));
-    if (searchCloseBtn) searchCloseBtn.addEventListener('click', () => toggleSearch(false));
-    if (searchClearBtn) {
-        searchClearBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            performSearch('');
-            searchInput.focus();
-        });
-    }
-
-    searchInput.addEventListener('input', (e) => performSearch(e.target.value));
-
-    // Shortcut: ESC to close
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && searchOverlay.classList.contains('active')) {
-            toggleSearch(false);
-        }
-    });
-
-    // Touch support improvement for mobile close
-    searchOverlay.addEventListener('click', (e) => {
-        if (e.target === searchOverlay) toggleSearch(false);
-    });
-})();

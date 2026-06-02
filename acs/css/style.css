@@ -55,7 +55,13 @@ html {
 body {
     max-width: 100%;
     overflow-x: hidden;
+    overscroll-behavior-y: none; /* Prevent scroll bouncing (grey area at bottom) */
     background: #000 !important; /* Ensure black background */
+}
+
+main {
+    overflow-x: hidden;
+    overflow-y: hidden; /* Prevent AOS/GSAP from expanding document height, safe for all browsers */
 }
 
 /* Welcome Popup Styles */
@@ -74,7 +80,7 @@ body {
     align-items: center;
     padding: 20px;
     opacity: 1;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
     /* Prevent layout shift when scroll is locked */
     overflow: hidden;
 }
@@ -82,6 +88,7 @@ body {
 .intro-popup.hidden {
     opacity: 0;
     pointer-events: none;
+    visibility: hidden;
 }
 
 .popup-card {
@@ -2011,20 +2018,18 @@ textarea.form-control {
 .go-to-top {
     position: fixed;
     bottom: 50px;
-    width: 50px;
-    height: 50px;
-
-    color: white;
-    /* පාට වෙනස් කරන ලදී */
+    width: 60px;
+    height: 60px;
+    background-color: var(--primary-color);
+    color: #fff;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 1.5rem;
     text-decoration: none;
-    cursor: pointer;
-    z-index: 999;
-    transition: opacity 0.3s, transform 0.3s, background-color 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
     opacity: 0;
     pointer-events: none;
 }
@@ -2145,6 +2150,12 @@ textarea.form-control {
     .chatbot-container {
         bottom: 30px !important;
         /* Chatbot button safe zone */
+    }
+    
+    .go-to-top {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.3rem !important;
     }
 }
 
@@ -4516,3 +4527,7 @@ textarea.form-control {
         filter: blur(3px) brightness(0.35);
     }
 }
+/* --- PERFORMANCE OVERRIDES --- */
+.testimonial-card, .branding-card, .portfolio-card, .project-card, .category-card, .option-item, .price-accordion .accordion-item, .event-management .card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+
+html { overscroll-behavior-y: none !important; background: #000 !important; }

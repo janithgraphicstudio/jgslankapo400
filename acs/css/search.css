@@ -1,0 +1,209 @@
+/* Powerful Floating Search Feature - Navbar Integration */
+
+.nav-search-wrapper {
+    position: fixed;
+    right: 150px; /* Positioned to the left of the service launcher (which is at right: 90px) */
+    top: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.floating-search-bar {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    height: 48px;
+    overflow: hidden;
+    width: 48px; /* Initial state: just an icon */
+    transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.floating-search-bar:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.floating-search-bar.expanded {
+    width: 350px; /* Expanded state */
+    background: #111;
+    border-color: #0059ff;
+    box-shadow: 0 5px 20px rgba(0, 89, 255, 0.2);
+}
+
+.search-toggle-btn {
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color 0.3s ease;
+}
+
+.search-toggle-btn:hover {
+    color: #0059ff;
+}
+
+.search-toggle-btn .btn-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    margin-left: 6px;
+    display: none; /* Hidden initially */
+    white-space: nowrap;
+}
+
+.floating-search-bar.expanded .search-toggle-btn {
+    width: auto;
+    padding: 0 15px;
+    background: #0059ff;
+    border-radius: 0 30px 30px 0;
+    color: #fff;
+}
+
+.floating-search-bar.expanded .search-toggle-btn:hover {
+    background: #0046cc;
+    color: #fff;
+}
+
+.floating-search-bar.expanded .search-toggle-btn .btn-text {
+    display: inline-block;
+}
+
+.floating-search-bar.expanded .search-toggle-btn i {
+    display: none; /* Hide icon when text is shown */
+}
+
+.search-input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 0.95rem;
+    padding: 0 15px;
+    outline: none;
+    width: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.floating-search-bar.expanded .search-input {
+    width: 100%;
+    opacity: 1;
+}
+
+/* Search Results Dropdown */
+.search-results-dropdown {
+    position: absolute;
+    top: 50px; /* Right below the search bar */
+    right: 0;
+    width: 350px;
+    max-height: 400px;
+    background: #0a0a0a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 10000;
+}
+
+.search-results-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.search-result-item {
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover {
+    background: rgba(0, 89, 255, 0.1);
+}
+
+.search-result-title {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.search-result-desc {
+    color: #888;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.search-no-results {
+    padding: 20px;
+    text-align: center;
+    color: #888;
+}
+
+/* Custom Scrollbar for dropdown */
+.search-results-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+.search-results-dropdown::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+.search-results-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+/* Highlight Animation */
+@keyframes glow-flash {
+    0% { background-color: transparent; box-shadow: none; transform: scale(1); }
+    30% { background-color: rgba(0, 89, 255, 0.2); box-shadow: 0 0 20px rgba(0, 89, 255, 0.5); transform: scale(1.02); border-radius: 10px; }
+    100% { background-color: transparent; box-shadow: none; transform: scale(1); border-radius: 0; }
+}
+
+.highlight-flash {
+    animation: glow-flash 2s ease-out forwards;
+}
+
+@media (max-width: 768px) {
+    .nav-search-wrapper {
+        position: fixed;
+        right: 70px; /* Hamburger is at ~15px right + 40px width + 15px spacing */
+        top: 15px; /* Match navbar top */
+        margin-right: 0;
+    }
+    .floating-search-bar {
+        height: 40px; /* Match mobile menu-toggle height */
+        width: 40px;
+    }
+    .search-toggle-btn {
+        height: 40px;
+        width: 40px;
+    }
+    .floating-search-bar.expanded {
+        width: 250px;
+    }
+    .search-results-dropdown {
+        width: 280px;
+        right: -50px; /* Center it a bit on mobile */
+    }
+}
