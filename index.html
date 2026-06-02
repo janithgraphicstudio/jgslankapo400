@@ -13,19 +13,19 @@
     <meta name="keywords"
         content="Janith Graphic Studio, Janith Graphic Studio Portfolio, Janith Athma Herath, JGS Lanka, jgs lanka company, Graphic Design Sri Lanka, Logo Design, Social Media Design, Web Design, Kurunegala, Artist">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://jgslankaportfolio.pages.dev/">
+    <meta property="og:url" content="http://jgslankaportfolio.wuaze.com/">
     <meta property="og:image" content="https://janithgraphicstudio.github.io/JGS-Lanka-Portfolio-/Profile.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Janith Graphic Studio Portfolio">
     <meta name="twitter:description"
         content="High-quality graphic design & logo design services in Sri Lanka by Janith Athma Herath.">
     <meta name="twitter:image" content="https://janithgraphicstudio.github.io/JGS-Lanka-Portfolio-/Profile.png">
-    <meta name="twitter:url" content="https://jgslankaportfolio.pages.dev/">
+    <meta name="twitter:url" content="http://jgslankaportfolio.wuaze.com/">
     <link rel="icon" type="image/png" sizes="32x32" href="Profile.png">
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="icon" type="image/png" sizes="16x16" href="Profile.png">
     <link rel="apple-touch-icon" sizes="180x180" href="Profile.png">
-   <meta name="google-site-verification" content="PHV9RwgfoVvjLUaUPe4p8xWLc-ojtVm7k5GI8D_RxYA" />
+    <meta name="google-site-verification" content="dRv7VitB5-LyWpJml0iv5tZ-2gmHWMzKaIBjdDWRznc" />
     <link rel="preload" as="image" href="logo.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,7 +37,8 @@
     <link rel="stylesheet" href="acs/css/style.css">
     <link rel="stylesheet" href="acs/css/new.css">
     <link rel="stylesheet" href="acs/css/mobile.css">
-
+    <link rel="stylesheet" href="acs/css/premium-3d.css">
+    <link rel="stylesheet" href="acs/css/search.css">
 </head>
 
 <body>
@@ -81,11 +82,9 @@
 
     <div class="navbar" id="navbar">
         <nav>
+            <!-- Floating Search Container Moved out of Navbar -->
             <button class="menu-toggle" id="menu-toggle" aria-label="Open menu">
                 <i class="fas fa-bars"></i>
-            </button>
-            <button id="search-open-btn" class="search-nav-btn-floating" aria-label="Open Search">
-                <i class="fas fa-search"></i>
             </button>
             <ul id="nav-links">
                 <li class="close-btn-li"><button class="menu-close-btn" id="menu-close-btn"
@@ -123,8 +122,8 @@
             </div>
             <div class="line-segment"></div>
         </div>
-        <img src="hlogo.png" alt="Janith Profile" class="profile-img">
-        <h1 class="hero-title">JGS LANKA CO. <br><span class="gradient-text">PORTFOLIO PAGE</span></h1>
+        <!-- <img src="hlogo.png" alt="Janith Profile" class="profile-img"> -->
+        <h1 class="hero-title">JGS LANKA CO. <br><span class="gradient-text">PORTFOLIO</span></h1>
         <p class="hero-description">Discover a premium collection of our creative design solutions and explore the
             professional services we
             offer to elevate your brand to the next level.</p>
@@ -482,8 +481,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="swiper-button-prev brand-prev"><i class="fas fa-chevron-left"></i></div>
-                    <div class="swiper-button-next brand-next"><i class="fas fa-chevron-right"></i></div>
+
                 </div>
 
                 <div class="branding-tab-content" id="logo-content">
@@ -555,8 +553,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="swiper-button-prev logo-prev"><i class="fas fa-chevron-left"></i></div>
-                    <div class="swiper-button-next logo-next"><i class="fas fa-chevron-right"></i></div>
+
                 </div>
             </div>
 
@@ -1329,6 +1326,21 @@
         <i class="fab fa-whatsapp"></i>
     </a> -->
 
+    <div class="floating-search-wrapper nav-search-wrapper">
+        <div class="search-results-dropdown" id="search-results-dropdown">
+            <!-- Results injected here -->
+        </div>
+        <div class="floating-search-bar" id="floating-search-bar">
+            <button id="floating-search-toggle" class="search-toggle-btn" aria-label="Search">
+                <i class="fas fa-search"></i>
+                <span class="btn-text">Search</span>
+            </button>
+            <input type="text" id="floating-search-input" class="search-input" placeholder="Search anything..." autocomplete="off">
+        </div>
+    </div>
+
+    <!-- search wrapper moved to nav -->
+
     <div class="jgs-service-launcher">
         <button id="service-launcher-toggle" class="service-launcher-btn" aria-label="Open Services Menu">
             <i class="far fa-clone"></i> </button>
@@ -1409,56 +1421,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.34/dist/lenis.min.js" defer></script>
     <script src="details.js" defer></script>
     <script src="acs/js/script.js" defer></script>
+    <script src="acs/js/3d-effects.js" defer></script>
+    <script src="acs/js/search.js" defer></script>
 
-    <!-- Powerful Search Engine Overlay -->
-    <div id="search-overlay" class="search-overlay">
-        <div class="search-container">
-            <div class="search-header">
-                <div class="search-input-wrapper">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="search-input" placeholder="Search services, projects, FAQs..."
-                        autocomplete="off">
-                    <button id="search-clear-btn" class="search-clear-btn" title="Clear Search">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <button id="search-close-btn" class="search-close-btn" aria-label="Close Search">&times;</button>
-            </div>
-            <div class="search-results-wrapper">
-                <div id="search-results" class="search-results">
-                    <!-- Results will be injected here by JavaScript -->
-                    <div class="search-empty-state">
-                        <i class="fas fa-search"></i>
-                        <p>Start typing to search across the portfolio...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="search-footer">
-                <div class="search-hints">
-                    <span><kbd>ESC</kbd> to close</span>
-                    <span><kbd>Enter</kbd> to select</span>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Search wrapper moved to navbar -->
 
-    <!-- Price Popup Container -->
-    <div id="price-popup-overlay" class="price-popup-overlay" onclick="closePricePopup()"></div>
-    <div id="price-popup" class="price-popup">
-        <div class="price-popup-header">
-            <h3 id="price-popup-title">Title</h3>
-            <button class="price-popup-close" onclick="closePricePopup()">&times;</button>
-        </div>
-        <div class="price-popup-content">
-            <div class="price-range">
-                <i class="fas fa-tag"></i> <span id="price-popup-range">Rs. 0 - Rs. 0</span>
-            </div>
-            <div class="price-details" id="price-popup-desc">
-                Details...
-            </div>
-            <a href="https://wa.me/94702001859" target="_blank" class="price-popup-buy-btn">Order Now via WhatsApp</a>
-        </div>
-    </div>
 
 </body>
 
