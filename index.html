@@ -34,9 +34,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
-    <link rel="stylesheet" href="acs/css/style.css">
+    <link rel="stylesheet" href="acs/css/style.css?v=10">
     <link rel="stylesheet" href="acs/css/new.css">
-    <link rel="stylesheet" href="acs/css/mobile.css">
+    <link rel="stylesheet" href="acs/css/mobile.css?v=2">
     <link rel="stylesheet" href="acs/css/premium-3d.css">
     <link rel="stylesheet" href="acs/css/search.css">
 </head>
@@ -155,7 +155,6 @@
                     <div class="swiper-slide"><img src="gu/g10.jpg" alt="Gallery Image 10" loading="lazy"></div>
                 </div>
             </div>
-            <a href="#portfolio" class="animated-btn"><span class="btn-inner">View Full Gallery</span></a>
         </section>
 
         <!-- Portfolio Section -->
@@ -1305,11 +1304,26 @@
     <div class="chatbot-container">
         <div class="chatbot-panel">
             <div class="chatbot-header">
-                <h3>JGS ChatBot Assistant</h3>
+                <div class="chatbot-header-info">
+                    <div class="chatbot-avatar">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                        <span class="online-indicator"></span>
+                    </div>
+                    <div class="chatbot-header-text">
+                        <h3>JGS AI Assistant</h3>
+                        <p>Online • Ready to Help</p>
+                    </div>
+                </div>
                 <button class="chatbot-close">&times;</button>
             </div>
             <div class="chatbot-messages" id="chatbot-messages">
                 <!-- Messages will be added here dynamically -->
+            </div>
+            <div class="chatbot-chips" id="chatbot-chips">
+                <div class="chatbot-chip" data-query="Pricing">💰 Pricing</div>
+                <div class="chatbot-chip" data-query="Services">🎨 Services</div>
+                <div class="chatbot-chip" data-query="Contact">📞 Contact Us</div>
+                <div class="chatbot-chip" data-query="Location">📍 Our Location</div>
             </div>
             <div class="chatbot-input">
                 <input type="text" placeholder="Type your message..." id="user-input">

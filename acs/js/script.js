@@ -36,7 +36,12 @@ function initLoopingSwiper(selector, config, minSlidesRequired = 6) {
         }
     }
     if (typeof Swiper !== 'undefined') {
-        return new Swiper(selector, config);
+        const finalConfig = {
+            ...config,
+            observer: true,
+            observeParents: true
+        };
+        return new Swiper(selector, finalConfig);
     } else {
         console.warn(`Swiper is not loaded, skipped initialization for ${selector}`);
         return null;
@@ -103,9 +108,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Premium Features Initialization (Lenis, Cursor, GSAP) ---
 
-    // 1. Initialize Lenis Smooth Scroll
-    if (typeof Lenis !== 'undefined') {
-        const lenis = new Lenis({
+    // 1. Initialize Lenis Smooth Scroll (Desktop only for scroll performance and mobile touch scrolling safety)
+    let lenis = null;
+    if (typeof Lenis !== 'undefined' && window.innerWidth > 768) {
+        lenis = new Lenis({
             duration: 1.2,
             easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             direction: 'vertical',
@@ -125,8 +131,10 @@ document.addEventListener('DOMContentLoaded', function () {
         // Drive Lenis scrolling natively via high-priority requestAnimationFrame loop
         // to bypass any GSAP ticker latency or lag-smoothing hiccups
         function raf(time) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
+            if (lenis) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
         }
         requestAnimationFrame(raf);
 
@@ -134,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Keep ScrollTrigger.refresh() OUT of this loop to prevent infinite layout-calculation cascades
         if (typeof ResizeObserver !== 'undefined') {
             const resizeObserver = new ResizeObserver(() => {
-                lenis.resize();
+                if (lenis) lenis.resize();
             });
             resizeObserver.observe(document.body);
         }
@@ -142,29 +150,36 @@ document.addEventListener('DOMContentLoaded', function () {
         // Fallback load-event resizes (safe to refresh ScrollTrigger once layout finishes loading)
         window.addEventListener('load', () => {
             setTimeout(() => {
-                lenis.resize();
+                if (lenis) lenis.resize();
                 if (typeof ScrollTrigger !== 'undefined') {
                     ScrollTrigger.refresh();
                 }
             }, 600);
         });
+    } else {
+        console.log('Lenis smooth scroll disabled on mobile or library not loaded');
+    }
 
-        // Intercept anchor links for smooth scrolling via Lenis
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                const targetId = this.getAttribute('href');
-                if (targetId && targetId !== '#') {
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        e.preventDefault();
+    // Intercept anchor links for smooth scrolling (Lenis on desktop, native smooth scroll fallback on mobile)
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const targetId = this.getAttribute('href');
+            if (targetId && targetId !== '#') {
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    e.preventDefault();
+                    if (lenis) {
                         lenis.scrollTo(targetElement, { offset: -50 }); // Offset for navbar
+                    } else {
+                        // Native smooth scrolling fallback for mobile devices
+                        const yOffset = -50;
+                        const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({ top: y, behavior: 'smooth' });
                     }
                 }
-            });
+            }
         });
-    } else {
-        console.warn('Lenis not loaded');
-    }
+    });
 
     // 2. Custom Cursor Logic
     const cursor = document.createElement('div');
@@ -329,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         grabCursor: true,
         allowTouchMove: true,
-    }, 15);
+    }, 30);
 
     // --- Testimonials Slider Logic ---
     const testimonialsSlider = initLoopingSwiper('.testimonials-slider', {
@@ -355,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 slidesPerView: 3,
             },
         }
-    }, 15);
+    }, 30);
 
     // --- Animate Skills Bars on Scroll ---
     const skillBars = document.querySelectorAll('.skill-bar');
@@ -399,81 +414,83 @@ document.addEventListener('DOMContentLoaded', function () {
     const menuToggle = document.getElementById('menu-toggle');
     const navLinks = document.getElementById('nav-links');
     const navLinkItems = document.querySelectorAll('#nav-links li a');
-    const toggleIcon = menuToggle.querySelector('i');
+    
+    if (menuToggle && navLinks) {
+        const toggleIcon = menuToggle.querySelector('i');
 
-    function toggleMenu(forceClose = false) {
-        const isOpen = navLinks.classList.contains('active');
+        function toggleMenu(forceClose = false) {
+            const isOpen = navLinks.classList.contains('active');
 
-        if (isOpen || forceClose) {
-            navLinks.classList.remove('active');
-            toggleIcon.classList.replace('fa-times', 'fa-bars');
-            document.body.style.overflow = ''; // Unlock scroll
-        } else {
-            navLinks.classList.add('active');
-            toggleIcon.classList.replace('fa-bars', 'fa-times');
-            document.body.style.overflow = 'hidden'; // Lock scroll
+            if (isOpen || forceClose) {
+                navLinks.classList.remove('active');
+                if (toggleIcon) toggleIcon.classList.replace('fa-times', 'fa-bars');
+                document.body.style.overflow = ''; // Unlock scroll
+            } else {
+                navLinks.classList.add('active');
+                if (toggleIcon) toggleIcon.classList.replace('fa-bars', 'fa-times');
+                document.body.style.overflow = 'hidden'; // Lock scroll
+            }
         }
+
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu();
+        });
+
+        // Close menu when a link is clicked
+        navLinkItems.forEach(link => {
+            link.addEventListener('click', () => toggleMenu(true));
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (navLinks.classList.contains('active') && !navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+                toggleMenu(true);
+            }
+        });
     }
-
-    menuToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleMenu();
-    });
-
-    // Close menu when a link is clicked
-    navLinkItems.forEach(link => {
-        link.addEventListener('click', () => toggleMenu(true));
-    });
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (navLinks.classList.contains('active') && !navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
-            toggleMenu(true);
-        }
-    });
 
     // --- Go to Top Button ---
     const goToTopBtn = document.querySelector('.go-to-top');
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 300) {
-            goToTopBtn.classList.add('show');
-        } else {
-            goToTopBtn.classList.remove('show');
-        }
-        // --- Navbar Scrollspy (Highlight link on scroll) ---
-        const sections = document.querySelectorAll('section[id], header[id]');
-        const navLinks = document.querySelectorAll('.navbar ul li a');
+    if (goToTopBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                goToTopBtn.classList.add('show');
+            } else {
+                goToTopBtn.classList.remove('show');
+            }
+        });
+    }
 
-        const observerOptions = {
-            root: null, // 'null' යනු viewport එකයි
-            rootMargin: '0px',
-            threshold: 0.2 // අංශයක් 20%ක් පෙනෙන විට trigger වීමට (වෙනස් කරන ලදී)
+    // --- Navbar Scrollspy (Highlight link on scroll - optimized and initialized once) ---
+    const sections = document.querySelectorAll('section[id], header[id]');
+    const navSpyLinks = document.querySelectorAll('.navbar ul li a');
+
+    if (sections.length > 0 && navSpyLinks.length > 0 && typeof IntersectionObserver !== 'undefined') {
+        const spyObserverOptions = {
+            root: null,
+            rootMargin: '-20% 0px -60% 0px', // focused viewport zone
+            threshold: 0
         };
 
-        const observer = new IntersectionObserver((entries) => {
+        const spyObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                // isIntersecting යනු අංශය තිරයේ පෙනේද යන්නයි
                 if (entry.isIntersecting) {
                     const id = entry.target.getAttribute('id');
                     const activeLink = document.querySelector(`.navbar ul li a[href="#${id}"]`);
 
-                    // අදාළ ID එකට link එකක් ඇත්නම් පමණක්...
                     if (activeLink) {
-                        // පළමුව, සියලුම link වලින් 'active' class එක ඉවත් කරන්න
-                        navLinks.forEach(link => link.classList.remove('active'));
-
-                        // අලුතින් පෙනෙන අංශයට අදාළ link එකට 'active' class එක එක් කරන්න
+                        navSpyLinks.forEach(link => link.classList.remove('active'));
                         activeLink.classList.add('active');
                     }
                 }
             });
-        }, observerOptions);
+        }, spyObserverOptions);
 
-        // සියලුම අංශ නිරීක්ෂණය කිරීම ආරම්භ කරන්න
         sections.forEach(section => {
-            observer.observe(section);
+            spyObserver.observe(section);
         });
-    });
+    }
 
 
 
@@ -701,6 +718,18 @@ document.addEventListener('DOMContentLoaded', function () {
                             setTimeout(showResetButton, 500);
                         });
                     });
+                } else if (lowerMsg.includes('services') || lowerMsg.includes('service') || lowerMsg.includes('design') || lowerMsg.includes('සේවා') || lowerMsg.includes('වැඩ') || lowerMsg.includes('ඩිසයින්') || lowerMsg.includes('මෝස්තර')) {
+                    const servicesMsg = `
+                        🎨 <strong>Our Design & IT Services:</strong><br>
+                        • <strong>Logo Design:</strong> Corporate branding, 2D/3D logos.<br>
+                        • <strong>Social Media:</strong> Event posts, covers, thumbnails.<br>
+                        • <strong>Print & Brand:</strong> Leaflets, banners, business cards, corporate branding.<br>
+                        • <strong>Web & Software:</strong> Modern responsive websites, POS systems, custom software.<br><br>
+                        Choose a category below to explore:
+                    `;
+                    addBotMessage(servicesMsg, () => {
+                        setTimeout(showMainCategories, 500);
+                    });
                 } else if (lowerMsg.includes('website') || lowerMsg.includes('web') || lowerMsg.includes('වෙබ්')) {
                     const webMsg = `
                         💻 <strong>Web Design & Development:</strong><br>
@@ -803,6 +832,18 @@ document.addEventListener('DOMContentLoaded', function () {
             if (e.key === 'Enter') {
                 handleUserSendMessage();
             }
+        });
+
+        // suggestion chips click handler
+        const chatbotChips = chatbotPanel.querySelectorAll('.chatbot-chip');
+        chatbotChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                const query = chip.getAttribute('data-query');
+                if (userInput) {
+                    userInput.value = query;
+                    handleUserSendMessage();
+                }
+            });
         });
 
         // --- Helper Functions (සහායක Functions) ---
@@ -1222,7 +1263,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 spaceBetween: 30
             }
         }
-    }, 15);
+    }, 30);
 
     const logoSwiper = initLoopingSwiper('.branding-slider-logo', {
         loop: true,
@@ -1252,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 spaceBetween: 30
             }
         }
-    }, 15);
+    }, 30);
 
     // Tab ක්‍රියාකාරීත්වය
     const tabs = document.querySelectorAll('.tab-btn');
